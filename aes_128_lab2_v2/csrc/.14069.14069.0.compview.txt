@@ -1,0 +1,6 @@
+{"vcs1":{"timestamp_begin":1680895557.964563035, "rt":0.13, "ut":0.06, "st":0.05}}
+{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1680895557.587414765}
+{"VCS_COMP_START_TIME": 1680895557.587414765}
+{"VCS_COMP_END_TIME": 1680895558.136909374}
+{"VCS_USER_OPTIONS": "-q -nc -sverilog -sverilog -R -top aes_tb -debug_access+all aescipher.v aes_tb.v KeyGeneration.v mixcolumn.v rounds.v sbox.v shiftrow.v subbytes.v"}
+{"vcs1": {"peak_mem": 321984}}
