@@ -17,11 +17,11 @@
 module aescipher(
     input clk,
     input rst_,
-    input [7:0] din,
+    // input [7:0] din,
     //input [1:0] cmd,
     output [7:0] dout,
     output ready,
-	 output e128,
+	 output reg e128,
     output reg ok
 );
 
@@ -53,8 +53,8 @@ module aescipher(
     reg [1:0] state_cnt; 
     assign ready = (state_cnt == `S_ID);
 	 
-	 wire e128;
 	 wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55a;
+	 //wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55b;	//incorrect
     
 	 reg [10:0] count;
     //control FSM
@@ -70,6 +70,7 @@ module aescipher(
             ok <= 1'b0;
             output_cnt <= 4'b0;
             final_out_reg <= 128'b0;
+	    e128 <= 1'b0;	
 				cmd <= `CMD_SP;
 				count <= 0;
         end

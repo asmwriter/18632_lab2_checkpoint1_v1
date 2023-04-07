@@ -13,31 +13,25 @@ module aes_tb(
 reg clk = 1'b0;
 always #5 clk = !clk;
 
-//reg [127:0] plain_text = 128'h 00041214120412000c00131108231919;
-//reg [127:0] key = 128'h 2475a2b33475568831e2120013aa5487;
-//reg [7:0] din;
-//reg [1:0] cmd;
+reg [127:0] plain_text = 128'h 00041214120412000c00131108231919;
+reg [127:0] key = 128'h 2475a2b33475568831e2120013aa5487;
+reg [7:0] din;
+reg [1:0] cmd;
 reg rst_ = 1'b1;
 wire ok;
 wire ready;
 wire [7:0] dout;
-reg e128;
 
-//aescipher u1(.clk(clk),.din(din),.cmd(cmd),.ok(ok),.ready(ready),.dout(dout),.rst_(rst_));
-aescipher u1(.clk(clk),.ok(ok),.ready(ready),.dout(dout),.rst_(rst_), .e128(e128));
+aescipher u1(.clk(clk),.din(din),.cmd(cmd),.ok(ok),.ready(ready),.dout(dout),.rst_(rst_));
 integer i;
 initial begin
     #20
     rst_ = 1'b0;
     #20
     rst_ = 1'b1;
-    #1000;
-	
-$display("OUTPUT: e128:%d\n", e128);
-
-$finish;	
+    #10
     
-   /* 
+    
     cmd = `CMD_SP;
     #10
     for(i=0;i<16;i=i+1) begin
@@ -61,7 +55,7 @@ $finish;
    cmd = `CMD_ST;
    #20
    cmd = `CMD_ID;
-    */
+    
 end
 
 endmodule

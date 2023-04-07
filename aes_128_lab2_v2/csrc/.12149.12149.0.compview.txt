@@ -1,0 +1,9 @@
+{"vcs1":{"timestamp_begin":1680884688.296933226, "rt":0.50, "ut":0.24, "st":0.12}}
+{"vcselab":{"timestamp_begin":1680884688.829810202, "rt":0.74, "ut":0.21, "st":0.09}}
+{"link":{"timestamp_begin":1680884689.592332396, "rt":0.16, "ut":0.06, "st":0.05}}
+{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1680884687.922118966}
+{"VCS_COMP_START_TIME": 1680884687.922118966}
+{"VCS_COMP_END_TIME": 1680884690.448748124}
+{"VCS_USER_OPTIONS": "-q -nc -sverilog -sverilog -R -top aes_tb -debug_access+all aescipher.v aes_tb.v KeyGeneration.v mixcolumn.v rounds.v sbox.v shiftrow.v subbytes.v"}
+{"vcs1": {"peak_mem": 340312}}
+{"stitch_vcselab": {"peak_mem": 239036}}
