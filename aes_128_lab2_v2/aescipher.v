@@ -85,16 +85,10 @@ module aescipher(
                 `S_ID: begin
                     if(ok) begin
 								e128 = (final_out_reg == cipher_text) ? 1'b1: 1'b0;
-								if(count == 2) begin
-									cmd <= `CMD_SP;
-									ok <= 1'b0;
-									count <= 0; 
-                                    
-								end
-								else begin
-									count <= count + 1;
-								end
-								
+                                cmd <= `CMD_SP;
+                                ok <= 1'b0;
+                                count <= 0; 
+
 								/*
                                 if(output_cnt == 4'd15) begin
                                     ok <= 1'b0;
