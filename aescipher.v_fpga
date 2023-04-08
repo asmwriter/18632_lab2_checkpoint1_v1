@@ -19,9 +19,6 @@ module aescipher(
     input rst_,
     // input [7:0] din,
     //input [1:0] cmd,
-    input [127:0] input_key,
-    input [127:0] plain_text,	
-    input [127:0] cipher_text,	
     output [7:0] dout,
     output ready,
 	 output reg e128,
@@ -47,9 +44,7 @@ module aescipher(
     wire [127:0] round_key_out;
     wire [127:0] round_state_out;
     assign pre_round = state_reg ^ key_reg;
-   
-	
- 
+    
     
     rounds r(.clk(),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out));
     
@@ -58,8 +53,7 @@ module aescipher(
     reg [1:0] state_cnt; 
     assign ready = (state_cnt == `S_ID);
 	 
-	 //wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55a;
-	 wire[127:0] expected128;
+	 wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55a;
 	 //wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55b;	//incorrect
     
 	 reg [10:0] count;
@@ -76,34 +70,33 @@ module aescipher(
             ok <= 1'b0;
             output_cnt <= 4'b0;
             final_out_reg <= 128'b0;
-	        e128 <= 1'b0;	
-			cmd <= `CMD_SP;
-			count <= 0;
+	    e128 <= 1'b0;	
+				cmd <= `CMD_SP;
+				count <= 0;
         end
         else begin
             case(state_cnt)
                 `S_ID: begin
                     if(ok) begin
-								e128 = (final_out_reg == cipher_text) ? 1'b1: 1'b0;
-								if(count == 2) begin
+								e128 = (final_out_reg == expected128) ? 1'b1: 1'b0;
+								if(count == 100) begin
 									cmd <= `CMD_SP;
 									ok <= 1'b0;
 									count <= 0; 
-                                    
 								end
 								else begin
 									count <= count + 1;
 								end
 								
 								/*
-                                if(output_cnt == 4'd15) begin
-                                    ok <= 1'b0;
-                                    output_cnt <= 4'b0;
-                                end
-                                else begin
-                                    output_cnt <= output_cnt + 4'b1;
-                                    final_out_reg <= final_out_reg >> 8;
-                                end
+                        if(output_cnt == 4'd15) begin
+                            ok <= 1'b0;
+                            output_cnt <= 4'b0;
+                        end
+                        else begin
+                            output_cnt <= output_cnt + 4'b1;
+                            final_out_reg <= final_out_reg >> 8;
+                        end
 								*/
                     end
                     else begin
@@ -116,10 +109,7 @@ module aescipher(
                     end 
                 end
                 `S_ST: begin
-                    if(!complt_) begin 
-                        state_cnt <= `S_ID;
-                        complt_ <= 1'b1;
-                    end
+                    if(!complt_) state_cnt <= `S_ID;
                     else begin
                         if(round_cnt == 4'b0) begin
                             state_reg <= pre_round;
@@ -140,8 +130,7 @@ module aescipher(
                 end
                 `S_SK: begin
 							//key_reg <= 128'h 2475a2b33475568831e2120013aa5487;
-							//key_reg <= 128'h_000102030405060708090a0b0c0d0e0f;
-							key_reg <= input_key;
+							key_reg <= 128'h_000102030405060708090a0b0c0d0e0f;
 							state_cnt <= `S_ID;
 							cmd <= `CMD_ST;
 							/*
@@ -158,8 +147,7 @@ module aescipher(
                 end
                 `S_SP: begin
 							//state_reg <= 128'h 00041214120412000c00131108231919;
-							//state_reg <= 128'h_00112233445566778899aabbccddeeff;
-							state_reg <= plain_text;
+							state_reg <= 128'h_00112233445566778899aabbccddeeff;
 							state_cnt <= `S_ID;
 							cmd <= `CMD_SK;
 						  /*
