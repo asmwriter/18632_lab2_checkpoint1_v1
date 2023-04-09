@@ -4,7 +4,7 @@
 `define CMD_ST 2'b01
 `define CMD_SK 2'b10
 `define CMD_SP 2'b11
-`define ITER_NUM 127 //get from text file
+`define ITER_NUM 2 //get from text file
 
 
 module aes_tb(
@@ -25,11 +25,12 @@ wire ready;
 wire [7:0] dout;
 reg e128;
 
+
 reg first_round;
 reg[31:0] vectornum, errors;   // bookkeeping variables 
-reg[127:0]  testvectors[127:0];// array of testvectors
-reg[127:0]  testvectors1[127:0];// array of testvectors
-reg[217:0]  testvectors2[127:0];// array of testvectors
+reg[127:0]  testvectors[`ITER_NUM-1:0];// array of testvectors
+reg[127:0]  testvectors1[`ITER_NUM-1:0];// array of testvectors
+reg[127:0]  testvectors2[`ITER_NUM-1:0];// array of testvectors
 
 
 //aescipher u1(.clk(clk),.din(din),.cmd(cmd),.ok(ok),.ready(ready),.dout(dout),.rst_(rst_));
@@ -84,12 +85,16 @@ initial begin
 	$readmemh("input_key.txt", testvectors); // Read vectors 
 	$readmemh("plain_text.txt", testvectors1); // Read vectors 
 	$readmemh("cipher_text.txt", testvectors2); // Read vectors 
+	$display("input: plaintext[vectornum]=%x",testvectors1[0]);
+	$display("input: key[vectornum]=%x",testvectors[0]);
+	$display("output ciphertext[vectornum]=%x",testvectors2[0]);
 	// Initialize 
 	vectornum= 0; errors = 0;
 	//for inputting plaintext,keys for first round
 	first_round = 1'b1;
 	// Apply rst_ 
 	rst_ = 0; #100; rst_ = 1;
+
 
 // #10000
 // $finish;
@@ -101,8 +106,8 @@ end
 always @(posedge clk) begin 
 	#1;
 	if (rst_) begin
-		if (ok || first_round) begin 
-	 		{input_key, plain_text, cipher_text} = {testvectors[vectornum], testvectors1[vectornum], testvectors2[vectornum]}; 
+		if ((ok || first_round) && vectornum < `ITER_NUM) begin 
+	 		{input_key, plain_text, cipher_text} <= {testvectors[vectornum], testvectors1[vectornum], testvectors2[vectornum]}; 
 			first_round <= 1'b0;
 			
 		end
@@ -118,19 +123,45 @@ end
 
 
 // check results on falling edge of clk 
-always @(negedge clk)  begin 
-//always @(posedge ok)  begin 
+always @(posedge clk)  begin 
+	if(u1.state_cnt == `S_SP) begin
+		$display("state_reg : %x", u1.state_reg);
+	end
+	if(u1.state_cnt == `S_SK) begin
+		$display("key_reg : %x", u1.key_reg);
+	end
+	if(u1.state_cnt == `S_ST) begin
+		if(u1.round_cnt == 0) begin
+			$display("round count: %x", u1.round_cnt);
+			$display("data in : %x", u1.state_reg);
+			$display("data out %x", u1.pre_round);
+			$display("key in: %x", u1.key_reg);
+
+		end
+		if(u1.complt_) begin
+			$display("round count: %x", u1.round_cnt);
+			$display("data in : %x", u1.state_reg);
+			$display("data out: %x", u1.round_state_out);
+			$display("key in: %x", u1.key_reg);
+		end
+	end
 	if (ok) begin
 		if (rst_)   begin            // skip during rst_ begin 
-			if (e128 !== 1) begin 
+			if (e128 !== 1 && u1.state_cnt == `S_ID) begin 
 				// $display("Error: inputs = %b", {input_key, plain_text, cipher_text}); 
-				// $display("  outputs vectornum=%b, e128= %b", vectornum, e128); 
 				$display("Error for vectornum: %d", vectornum);
-				vectornum <= vectornum + 1; 
+				$display(" Expected cipher_text=%x", cipher_text); 
+				
+				$display(" Output cipher_text=%x, e128= %b", u1.final_out_reg, e128);  
 				errors = errors + 1; 
 			end	//if
+			else begin
+				$display("Matched for vectornum: %d", vectornum);
+			end
+			vectornum <= vectornum + 1;
 			if (vectornum == `ITER_NUM) begin 
 				$display("%d tests completed with %d errors", vectornum, errors); 
+				#1000
 				$finish;
 			end
 		end

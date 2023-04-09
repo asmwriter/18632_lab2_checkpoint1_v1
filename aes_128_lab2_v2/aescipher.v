@@ -24,7 +24,7 @@ module aescipher(
     input [127:0] cipher_text,	
     output [7:0] dout,
     output ready,
-	 output reg e128,
+	output  e128,
     output reg ok
 );
 
@@ -63,6 +63,7 @@ module aescipher(
 	 //wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55b;	//incorrect
     
 	 reg [10:0] count;
+    assign e128 = (final_out_reg == cipher_text) ? 1'b1: 1'b0;
     //control FSM
     always @ (posedge clk or negedge rst_) begin
         if(!rst_) begin
@@ -76,7 +77,7 @@ module aescipher(
             ok <= 1'b0;
             output_cnt <= 4'b0;
             final_out_reg <= 128'b0;
-	        e128 <= 1'b0;	
+	        // e128 <= 1'b0;	
 			cmd <= `CMD_SP;
 			count <= 0;
         end
@@ -84,7 +85,6 @@ module aescipher(
             case(state_cnt)
                 `S_ID: begin
                     if(ok) begin
-								e128 = (final_out_reg == cipher_text) ? 1'b1: 1'b0;
                                 cmd <= `CMD_SP;
                                 ok <= 1'b0;
                                 count <= 0; 

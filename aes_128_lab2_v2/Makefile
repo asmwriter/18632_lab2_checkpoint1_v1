@@ -1,4 +1,6 @@
 tb_aes:
+	vcs -sverilog -R +lint=all -debug_access+all -top aes_tb +incdir+include +lint=all *.v 
+tb_aes_gui:
 	vcs -sverilog -R +lint=all -debug_access+all -top aes_tb +incdir+include +lint=all *.v -gui
 clean:
 	rm -rf simv.daidir/
@@ -8,6 +10,7 @@ clean:
 	rm -f ucli.key
 	rm -f inter.vpd
 	rm -f .restartSimSession.tcl.old
+	rm -f .__*
 
 
 all: clean tb_aes
