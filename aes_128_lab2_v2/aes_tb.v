@@ -4,7 +4,7 @@
 `define CMD_ST 2'b01
 `define CMD_SK 2'b10
 `define CMD_SP 2'b11
-`define ITER_NUM 2 //get from text file
+`define ITER_NUM 128 //get from text file
 
 
 module aes_tb(
@@ -33,47 +33,9 @@ reg[127:0]  testvectors1[`ITER_NUM-1:0];// array of testvectors
 reg[127:0]  testvectors2[`ITER_NUM-1:0];// array of testvectors
 
 
-//aescipher u1(.clk(clk),.din(din),.cmd(cmd),.ok(ok),.ready(ready),.dout(dout),.rst_(rst_));
+
 aescipher u1(.clk(clk),.ok(ok),.ready(ready),.dout(dout),.rst_(rst_), .e128(e128), .input_key(input_key), .plain_text(plain_text), .cipher_text(cipher_text));
-integer i;
-/*
-initial begin
-    #20
-    rst_ = 1'b0;
-    #20
-    rst_ = 1'b1;
-    #1000;
 
-$display("OUTPUT: e128:%d\n", e128);
-
-$finish;	
-end
-*/    
-   /* 
-    cmd = `CMD_SP;
-    #10
-    for(i=0;i<16;i=i+1) begin
-        din = plain_text[7:0];
-        #10
-        plain_text = plain_text >> 8;
-    end
-    
-    cmd = `CMD_ID;
-    #20
-    cmd = `CMD_SK;
-    #10
-    for(i=0;i<16;i=i+1) begin
-        din = key[7:0];
-        #10
-        key = key >> 8;
-    end
-    
-   cmd = `CMD_ID;
-   #20
-   cmd = `CMD_ST;
-   #20
-   cmd = `CMD_ID;
-    */
 
 initial begin
 	clk = 1'b1;
@@ -100,16 +62,28 @@ initial begin
 // $finish;
 end
 
+logic count;
 
+always @(posedge clk) begin
+	if (~rst_) begin
+		count <=0;
+	end
+	if (ok) begin
+ 		count <= 1'b1; 
+		if (count) begin
+			count <= 1'b0;
+		end
+		$display("count=%d\n", count);
+end
+end
 
 // apply test vectors on rising edge of 
 always @(posedge clk) begin 
 	#1;
 	if (rst_) begin
-		if ((ok || first_round) && vectornum < `ITER_NUM) begin 
+		if (((ok && count) || first_round) && vectornum < `ITER_NUM ) begin 
 	 		{input_key, plain_text, cipher_text} <= {testvectors[vectornum], testvectors1[vectornum], testvectors2[vectornum]}; 
 			first_round <= 1'b0;
-			
 		end
 	end
 	// $display("state=%x", u1.state_cnt);
@@ -121,9 +95,10 @@ always @(posedge clk) begin
 	// $display("output ciphertext[vectornum]=%x",cipher_text);
 end
 
-
+`define DEBUG 0
 // check results on falling edge of clk 
 always @(posedge clk)  begin 
+	if (`DEBUG) begin
 	if(u1.state_cnt == `S_SP) begin
 		$display("state_reg : %x", u1.state_reg);
 	end
@@ -145,27 +120,31 @@ always @(posedge clk)  begin
 			$display("key in: %x", u1.key_reg);
 		end
 	end
-	if (ok) begin
-		if (rst_)   begin            // skip during rst_ begin 
-			if (e128 !== 1 && u1.state_cnt == `S_ID) begin 
+	end
+	if (ok && rst_) begin
+		if (!count) begin
+			if (vectornum < `ITER_NUM) begin
+			if (e128 !== 1) begin 
 				// $display("Error: inputs = %b", {input_key, plain_text, cipher_text}); 
 				$display("Error for vectornum: %d", vectornum);
 				$display(" Expected cipher_text=%x", cipher_text); 
-				
 				$display(" Output cipher_text=%x, e128= %b", u1.final_out_reg, e128);  
 				errors = errors + 1; 
 			end	//if
 			else begin
 				$display("Matched for vectornum: %d", vectornum);
 			end
-			vectornum <= vectornum + 1;
-			if (vectornum == `ITER_NUM) begin 
-				$display("%d tests completed with %d errors", vectornum, errors); 
-				#1000
-				$finish;
 			end
+		end //count 
+		else begin
+			vectornum = vectornum + 1'b1;
 		end
 	end
+			if (vectornum == `ITER_NUM) begin 
+				$display("%d tests completed with %d errors", vectornum, errors); 
+				$finish;
+			end
+
 end
 
 endmodule
