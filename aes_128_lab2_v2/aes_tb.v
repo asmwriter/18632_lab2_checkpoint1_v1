@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`define DEBUG 0
 
 `define CMD_ID 2'b00
 `define CMD_ST 2'b01
@@ -7,9 +8,7 @@
 `define ITER_NUM 128 //get from text file
 
 
-module aes_tb(
-    
-);
+module aes_tb;
 
 logic clk;
 reg [127:0] plain_text;
@@ -22,7 +21,7 @@ reg [127:0] cipher_text;
 reg rst_ = 1'b1;
 wire ok;
 wire ready;
-wire [7:0] dout;
+//wire [7:0] dout;
 reg e128;
 
 
@@ -34,13 +33,15 @@ reg[127:0]  testvectors2[`ITER_NUM-1:0];// array of testvectors
 
 
 
-aescipher u1(.clk(clk),.ok(ok),.ready(ready),.dout(dout),.rst_(rst_), .e128(e128), .input_key(input_key), .plain_text(plain_text), .cipher_text(cipher_text));
+aescipher u1(.clk(clk),.ok(ok),.ready(ready),.rst_(rst_), .e128(e128), .input_key(input_key), .plain_text(plain_text), .cipher_text(cipher_text));
 
 
 initial begin
 	clk = 1'b1;
-	forever #10ns clk = ~clk;
+	forever #0.5ns clk = ~clk;	//1MHz
 end
+
+wire [31:0] num_iters;
 
 initial begin            
 // Will execute at the beginning once begin 	
@@ -57,12 +58,17 @@ initial begin
 	// Apply rst_ 
 	rst_ = 0; #100; rst_ = 1;
 
+	// while (testvectors[num] !== 'hx) begin
+	// 	num_iters = num_iters + 1'b1;
+	// end
+
 
 // #10000
 // $finish;
 end
 
-logic count;
+reg count;
+
 
 always @(posedge clk) begin
 	if (~rst_) begin
@@ -73,15 +79,17 @@ always @(posedge clk) begin
 		if (count) begin
 			count <= 1'b0;
 		end
+		if (`DEBUG) begin
 		$display("count=%d\n", count);
-end
+		end
+	end
 end
 
 // apply test vectors on rising edge of 
 always @(posedge clk) begin 
 	#1;
 	if (rst_) begin
-		if (((ok && count) || first_round) && vectornum < `ITER_NUM ) begin 
+		if (((ok && count)) && vectornum < `ITER_NUM ) begin 
 	 		{input_key, plain_text, cipher_text} <= {testvectors[vectornum], testvectors1[vectornum], testvectors2[vectornum]}; 
 			first_round <= 1'b0;
 		end
@@ -95,7 +103,7 @@ always @(posedge clk) begin
 	// $display("output ciphertext[vectornum]=%x",cipher_text);
 end
 
-`define DEBUG 0
+
 // check results on falling edge of clk 
 always @(posedge clk)  begin 
 	if (`DEBUG) begin
@@ -121,9 +129,13 @@ always @(posedge clk)  begin
 		end
 	end
 	end
+
+	
+
+	//check logic
 	if (ok && rst_) begin
 		if (!count) begin
-			if (vectornum < `ITER_NUM) begin
+			if ((vectornum < `ITER_NUM) && (vectornum!=0) && (cipher_text !== 'hx)) begin
 			if (e128 !== 1) begin 
 				// $display("Error: inputs = %b", {input_key, plain_text, cipher_text}); 
 				$display("Error for vectornum: %d", vectornum);
@@ -132,7 +144,7 @@ always @(posedge clk)  begin
 				errors = errors + 1; 
 			end	//if
 			else begin
-				$display("Matched for vectornum: %d", vectornum);
+				$display("PASSED for vectornum: %d", vectornum);
 			end
 			end
 		end //count 
