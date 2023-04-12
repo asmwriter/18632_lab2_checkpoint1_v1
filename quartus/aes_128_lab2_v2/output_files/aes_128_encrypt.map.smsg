@@ -1,0 +1,1 @@
+Warning (10268): Verilog HDL information at aescipher.v(93): always construct contains both blocking and non-blocking assignments File: A:/CMU/Courses/18632_Intro_to_HW_security/Lab2/18632_lab2_checkpoint1_v1-main/18632_lab2_checkpoint1_v1-main/aes_128_lab2_v2/aescipher.v Line: 93

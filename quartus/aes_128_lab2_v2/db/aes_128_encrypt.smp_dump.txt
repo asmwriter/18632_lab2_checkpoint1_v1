@@ -1,0 +1,13 @@
+
+State Machine - |aes_128_encrypt|cmd
+Name cmd.11 cmd.01 cmd.10 
+cmd.11 0 0 0 
+cmd.10 1 0 1 
+cmd.01 1 1 0 
+
+State Machine - |aes_128_encrypt|state_cnt
+Name state_cnt.11 state_cnt.10 state_cnt.01 state_cnt.00 
+state_cnt.00 0 0 0 0 
+state_cnt.01 0 0 1 1 
+state_cnt.10 0 1 0 1 
+state_cnt.11 1 0 0 1 
