@@ -29,9 +29,9 @@ module aescipher(
 );
 
     // //Only for synthesis (place and route)
-	 wire input_key = 128'h0000000000000000000000000000000;
-	 wire plain_text = 128'h80000000000000000000000000000000;
-	 wire cipher_text = 128'h3ad78e726c1ec02b7ebfe92b23d9ec34;
+	 wire [127:0] input_key = 128'h0000000000000000000000000000000;
+	 wire [127:0] plain_text = 128'h80000000000000000000000000000000;
+	 wire [127:0] cipher_text = 128'h3ad78e726c1ec02b7ebfe92b23d9ec34;
 
 
 //anu 	reg [31:0] addr;
@@ -60,7 +60,7 @@ module aescipher(
     rounds r(.clk(),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out));
     
    
-    assign dout = final_out_reg[7:0];
+    // assign dout = final_out_reg[7:0];
     reg [1:0] state_cnt; 
     assign ready = (state_cnt == `S_ID);
 	 
