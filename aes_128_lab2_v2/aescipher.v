@@ -19,16 +19,25 @@ module aescipher(
     input rst_,
     // input [7:0] din,
     //input [1:0] cmd,
-    input [127:0] input_key,
-    input [127:0] plain_text,	
-    input [127:0] cipher_text,	
-    output [7:0] dout,
+   // input [127:0] input_key,
+   // input [127:0] plain_text,	
+   // input [127:0] cipher_text,	
+   // output [7:0] dout,
     output ready,
 	output  e128,
     output reg ok
 );
 
-    
+    // //Only for synthesis (place and route)
+	 wire input_key = 128'h0000000000000000000000000000000;
+	 wire plain_text = 128'h80000000000000000000000000000000;
+	 wire cipher_text = 128'h3ad78e726c1ec02b7ebfe92b23d9ec34;
+
+
+//anu 	reg [31:0] addr;
+//anu 	wire [31:0] address;
+//anu 	wire [127:0] rdata;
+
     wire [127:0] pre_round;
     
     reg plain_ok_;
@@ -48,9 +57,6 @@ module aescipher(
     wire [127:0] round_state_out;
     assign pre_round = state_reg ^ key_reg;
    
-	
- 
-    
     rounds r(.clk(),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out));
     
    

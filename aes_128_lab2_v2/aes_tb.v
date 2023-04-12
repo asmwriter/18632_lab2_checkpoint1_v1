@@ -90,7 +90,9 @@ always @(posedge clk) begin
 	#1;
 	if (rst_) begin
 		if (((ok && count)) && vectornum < `ITER_NUM ) begin 
-	 		{input_key, plain_text, cipher_text} <= {testvectors[vectornum], testvectors1[vectornum], testvectors2[vectornum]}; 
+	 	//	{input_key, plain_text, cipher_text} <= {testvectors[vectornum], testvectors1[vectornum], testvectors2[vectornum]}; 
+		//for loopig/power analysis
+		{input_key, plain_text, cipher_text} <= {testvectors[0], testvectors1[0], testvectors2[0]};
 			first_round <= 1'b0;
 		end
 	end
@@ -154,6 +156,7 @@ always @(posedge clk)  begin
 	end
 			if (vectornum == `ITER_NUM) begin 
 				$display("%d tests completed with %d errors", vectornum, errors); 
+				#1000;
 				$finish;
 			end
 
