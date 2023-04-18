@@ -21,12 +21,10 @@ reg[127:0] rndout;
 
 always @(posedge clk) begin
     if (delay_count % 6 == 0) begin
-   	delay_enable <=1;
 	delay_count <=1;
     end
     else begin
     delay_count <= delay_count +1;
-    delay_enable <=0;
     end
     end
 
@@ -51,32 +49,36 @@ always @ (posedge clk) begin
 	3'b100: begin // rndout 
             state <= 3'b101;
 	    out_enable <=0;
+	    delay_enable <=1;
         end
 	3'b101: begin // Buffer for update 
             state <= 3'b000;
+	    delay_enable <=0;
         end
         default:
             state <= 3'b000;
     endcase
 end
 
+
 KeyGeneration t0(rc,keyin,keyout);
 subbytes t1(.data(data_in),.sb(sb));
 shiftrow t2(.sb(sb_in),.sr(sr));
 mixcolumn t3(.a(sr_in),.mcl(mcl));
 
-/*
-KeyGeneration t0(rc,keyin,keyout);
-subbytes t1(data,sb);
-shiftrow t2(sb,sr);
-mixcolumn t3(sr,mcl);*/
-
-//assign rndout_test = (rc == 4'b1010) ? keyout^sr : keyout^mcl ;
-	
 always @(posedge clk) begin
 	if(out_enable) begin
 		rndout <= (rc == 4'b1010) ? keyout^sr : keyout^mcl ;
 	end
 end
+
+/*
+KeyGeneration t0(rc,keyin,keyout);
+subbytes t1(data,sb);
+shiftrow t2(sb,sr);
+mixcolumn t3(sr,mcl);
+
+assign rndout = (rc == 4'b1010) ? keyout^sr : keyout^mcl ;
+*/	
 
 endmodule

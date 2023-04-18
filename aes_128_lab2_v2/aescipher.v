@@ -122,12 +122,12 @@ module aescipher(
                             state_reg <= pre_round;
                             round_cnt <= round_cnt + 4'b1;
                         end
-                        else if(round_cnt < 4'b1010 && delay_enable) begin
+                        else if(round_cnt < 4'b1011 && delay_enable) begin
                             state_reg <= round_state_out;
                             key_reg <= round_key_out;
                             round_cnt <= round_cnt + 4'b1;
                         end
-                        else if(round_cnt == 4'b1010) begin
+                        else if(round_cnt == 4'b1011) begin
                             final_out_reg <= round_state_out;
                             round_cnt <= 4'b0;
                             complt_ <= 1'b0;
