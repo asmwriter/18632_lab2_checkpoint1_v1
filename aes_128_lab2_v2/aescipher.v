@@ -19,25 +19,16 @@ module aescipher(
     input rst_,
     // input [7:0] din,
     //input [1:0] cmd,
-   // input [127:0] input_key,
-   // input [127:0] plain_text,	
-   // input [127:0] cipher_text,	
-   // output [7:0] dout,
+    input [127:0] input_key,
+    input [127:0] plain_text,	
+    input [127:0] cipher_text,	
+    output [7:0] dout,
     output ready,
 	output  e128,
     output reg ok
 );
 
-    // //Only for synthesis (place and route)
-	 wire [127:0] input_key = 128'h0000000000000000000000000000000;
-	 wire [127:0] plain_text = 128'h80000000000000000000000000000000;
-	 wire [127:0] cipher_text = 128'h3ad78e726c1ec02b7ebfe92b23d9ec34;
-
-
-//anu 	reg [31:0] addr;
-//anu 	wire [31:0] address;
-//anu 	wire [127:0] rdata;
-
+    
     wire [127:0] pre_round;
     
     reg plain_ok_;
@@ -56,11 +47,17 @@ module aescipher(
     wire [127:0] round_key_out;
     wire [127:0] round_state_out;
     assign pre_round = state_reg ^ key_reg;
+
+    reg delay_enable;
    
-    rounds r(.clk(),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out));
+	
+ 
     
+    //rounds r(.clk(),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out));
+    
+    rounds r(.clk(clk),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out),.delay_enable(delay_enable));
    
-    // assign dout = final_out_reg[7:0];
+    assign dout = final_out_reg[7:0];
     reg [1:0] state_cnt; 
     assign ready = (state_cnt == `S_ID);
 	 
@@ -125,7 +122,7 @@ module aescipher(
                             state_reg <= pre_round;
                             round_cnt <= round_cnt + 4'b1;
                         end
-                        else if(round_cnt < 4'b1010) begin
+                        else if(round_cnt < 4'b1010 && delay_enable) begin
                             state_reg <= round_state_out;
                             key_reg <= round_key_out;
                             round_cnt <= round_cnt + 4'b1;
