@@ -55,7 +55,7 @@ module aescipher(
     
     //rounds r(.clk(),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out));
     
-    rounds r(.clk(clk),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out),.delay_enable(delay_enable));
+    rounds r(.clk(clk),.rst_(rst_),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out),.delay_enable(delay_enable));
    
     assign dout = final_out_reg[7:0];
     reg [1:0] state_cnt; 
@@ -122,12 +122,12 @@ module aescipher(
                             state_reg <= pre_round;
                             round_cnt <= round_cnt + 4'b1;
                         end
-                        else if(round_cnt < 4'b1011 && delay_enable) begin
+                        else if(round_cnt < 4'b1010 && delay_enable) begin
                             state_reg <= round_state_out;
                             key_reg <= round_key_out;
                             round_cnt <= round_cnt + 4'b1;
                         end
-                        else if(round_cnt == 4'b1011) begin
+                        else if(round_cnt == 4'b1010 && delay_enable) begin
                             final_out_reg <= round_state_out;
                             round_cnt <= 4'b0;
                             complt_ <= 1'b0;
