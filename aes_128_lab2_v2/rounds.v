@@ -1,12 +1,12 @@
 `timescale 1ns / 1ps
-`define NUM 4'd5
+`define NUM 4'd8
 
 // Key Generation starts at the first cycle of every round 
 // Last Stage is buffer. 
 // Last but one is for delay enable. Others can be used with varied 
-`define SB_EN 5'd10
-`define SR_EN 5'd16
-`define MC_EN 5'd24
+`define SB_EN 8'd10
+`define SR_EN 8'd16
+//`define MC_EN 5'd24
 // Each thing will happen in the next cycle. 
 
 module rounds(clk,rst_,rc,data,keyin,keyout,rndout,delay_enable);
@@ -28,10 +28,12 @@ reg delay_enable;
 reg [`NUM-1:0] delay_count = 3'b000;
 reg [127:0] rndout;
 reg [`NUM-1:0] con = 2 ** `NUM - 1;
+reg [`NUM-1:0] round_delay;
+assign round_delay = 5*rc;
 reg [`NUM-1:0] delay_stage = con-1;
-reg [`NUM-1:0] delay_stage_before = con-2;
 reg [`NUM-1:0] buffer_stage = con;
-
+reg [`NUM-1:0] mc_en;
+assign mc_en = con - 2 - round_delay ;
 
 always @(posedge clk) begin
     if (delay_count % (con+1) == 0) begin
@@ -56,16 +58,10 @@ always @ (posedge clk) begin
             state <= state + 1;
             sb_in <= sb;
         end
-        `MC_EN: begin // ShiftRows
+        mc_en: begin // ShiftRows
             state <= state +1 ;
             sr_in <= sr;
         end
-	// Adding this stage because, if there is no gap between Mix Colums
-	// stage and the enable delay, then it might overlap and cause
-	// mismatch
-        delay_stage_before: begin 
-	state <= delay_stage;
-        end   
 	delay_stage: begin // Delay Enable  
             state <= buffer_stage;
 	    delay_enable <=1;
