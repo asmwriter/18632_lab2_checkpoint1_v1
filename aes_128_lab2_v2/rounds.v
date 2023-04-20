@@ -4,8 +4,8 @@
 // Key Generation starts at the first cycle of every round 
 // Last Stage is buffer. 
 // Last but one is for delay enable. Others can be used with varied 
-`define SB_EN 8'd10
-`define SR_EN 8'd16
+//`define SB_EN 8'd10
+//`define SR_EN 8'd16
 //`define MC_EN 5'd24
 // Each thing will happen in the next cycle. 
 
@@ -25,24 +25,19 @@ wire [127:0] sb,sr,mcl;
 reg [`NUM-1:0] state = 0;
 reg [127:0] sb_in,sr_in,data_in;
 reg delay_enable;
-reg [`NUM-1:0] delay_count = 3'b000;
 reg [127:0] rndout;
-reg [`NUM-1:0] con = 2 ** `NUM - 1;
+reg [`NUM-1:0] sb_en = 'd6;
+reg [`NUM-1:0] sr_en = 'd12;
 reg [`NUM-1:0] round_delay;
-assign round_delay = 5*rc;
-reg [`NUM-1:0] delay_stage = con-1;
-reg [`NUM-1:0] buffer_stage = con;
-reg [`NUM-1:0] mc_en;
-assign mc_en = con - 2 - round_delay ;
+reg [`NUM-1:0] mc_en = 'd18;
+assign round_delay = 10*rc;
+reg [`NUM-1:0] con;
+assign con = mc_en + 2 + round_delay;
+reg [`NUM-1:0] delay_stage;
+assign delay_stage = con-1;
+reg [`NUM-1:0] buffer_stage;
+assign buffer_stage = con;
 
-always @(posedge clk) begin
-    if (delay_count % (con+1) == 0) begin
-	delay_count <=1;
-    end
-    else begin
-    delay_count <= delay_count +1;
-    end
-    end
 
 always @ (posedge clk) begin
     if (!rst_) begin 
@@ -50,15 +45,15 @@ always @ (posedge clk) begin
     end
     else begin
     case (state)
-        `SB_EN: begin // Key Generation
+        sb_en: begin
             state <= state + 1;
 	    data_in <= data;
         end
-        `SR_EN: begin // Subbytes
+        sr_en: begin
             state <= state + 1;
             sb_in <= sb;
         end
-        mc_en: begin // ShiftRows
+        mc_en: begin
             state <= state +1 ;
             sr_in <= sr;
         end
