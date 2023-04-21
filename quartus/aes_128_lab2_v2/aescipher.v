@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-`default_nettype wire
 
 `define S_ID 2'b00
 `define S_SP 2'b01
@@ -18,37 +17,19 @@
 module aes_128_encrypt(
     input clk,
     input rst_,
-    // input [7:0] din,
-    //input [1:0] cmd,
-  //  input [127:0] input_key,
-  //  input [127:0] plain_text,	
-  //  input [127:0] cipher_text,	
-   // output [7:0] dout,
+    // input [127:0] input_key,
+    // input [127:0] plain_text,	
+    // input [127:0] cipher_text,	
     output ready,
 	output  e128,
+	output clk_out,
     output reg ok
 );
 
-
-	 //Only for synthesis (place and route)
-	//wire [127:0] input_key = 128'h0000000000000000000000000000000;
-	//wire [127:0] plain_text = 128'h80000000000000000000000000000000;
-	//wire [127:0] cipher_text = 128'h3ad78e726c1ec02b7ebfe92b23d9ec34;
+	wire clk_div;
+   
+	 clock_divider clk_div_ins0(clk, clk_div);
 	
-	reg [127:0] input_key;
-	reg [127:0] plain_text;
-	reg [127:0] cipher_text;
-		
-	reg [31:0] addr;
-	wire [31:0] address;
-	wire [127:0] rdata;
-
-
-	
-
-	ram ram_large_ins0 (.address(address),.clock(clk),.data(data),.wren(1'b0),.q(rdata));
-
-    
     wire [127:0] pre_round;
     
     reg plain_ok_;
@@ -67,26 +48,33 @@ module aes_128_encrypt(
     wire [127:0] round_key_out;
     wire [127:0] round_state_out;
     assign pre_round = state_reg ^ key_reg;
+
+    wire delay_enable;
    
-	assign address = addr;
+		assign clk_out = clk_div;
 	
- 
+    //Only for synthesis (place and route)
+	wire [127:0] input_key = 128'h0000000000000000000000000000000;
+	wire [127:0] plain_text = 128'h80000000000000000000000000000000;
+	wire [127:0] cipher_text = 128'h3ad78e726c1ec02b7ebfe92b23d9ec34;
+
     
-    rounds r(.clk(),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out));
+    //rounds r(.clk(),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out));
     
+    rounds r(.clk(clk_div),.rst_(rst_),.rc(round_cnt),.data(state_reg),.keyin(key_reg),.keyout(round_key_out),.rndout(round_state_out),.delay_enable_t(delay_enable));
    
-    assign dout = final_out_reg[7:0];
+  //  assign dout = final_out_reg[7:0];
     reg [1:0] state_cnt; 
     assign ready = (state_cnt == `S_ID);
 	 
-	// wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55a;
+	 //wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55a;
 	 wire[127:0] expected128;
 	 //wire[127:0] expected128 = 128'h_69c4e0d86a7b0430d8cdb78070b4c55b;	//incorrect
     
 	 reg [10:0] count;
-    assign e128 = (final_out_reg == cipher_text) ? 1'b1: 1'b0;
+    assign e128 = ((!complt_) && (final_out_reg == cipher_text)) ? 1'b1: 1'b0;
     //control FSM
-    always @ (posedge clk or negedge rst_) begin
+    always @ (posedge clk_div or negedge rst_) begin
         if(!rst_) begin
             round_cnt <= 4'b0;
             state_cnt <= `S_ID;
@@ -99,13 +87,8 @@ module aes_128_encrypt(
             output_cnt <= 4'b0;
             final_out_reg <= 128'b0;
 	        // e128 <= 1'b0;	
-			  addr <= 32'b0;
 			cmd <= `CMD_SP;
 			count <= 0;
-			cipher_text <= 128'h0;
-			plain_text <= 128'h0;
-			input_key <= 128'h0;
-			
         end
         else begin
             case(state_cnt)
@@ -114,8 +97,6 @@ module aes_128_encrypt(
                                 cmd <= `CMD_SP;
                                 ok <= 1'b0;
                                 count <= 0; 
-										  addr <=0;
-										  
 
 								/*
                                 if(output_cnt == 4'd15) begin
@@ -146,16 +127,13 @@ module aes_128_encrypt(
                         if(round_cnt == 4'b0) begin
                             state_reg <= pre_round;
                             round_cnt <= round_cnt + 4'b1;
-									 //reading cipher text
-									 addr <= 3;
-									 cipher_text <= rdata;
                         end
-                        else if(round_cnt < 4'b1010) begin
+                        else if(round_cnt < 4'b1010 && delay_enable) begin
                             state_reg <= round_state_out;
                             key_reg <= round_key_out;
                             round_cnt <= round_cnt + 4'b1;
                         end
-                        else if(round_cnt == 4'b1010) begin
+                        else if(round_cnt == 4'b1010 && delay_enable) begin
                             final_out_reg <= round_state_out;
                             round_cnt <= 4'b0;
                             complt_ <= 1'b0;
@@ -166,11 +144,7 @@ module aes_128_encrypt(
                 `S_SK: begin
 							//key_reg <= 128'h 2475a2b33475568831e2120013aa5487;
 							//key_reg <= 128'h_000102030405060708090a0b0c0d0e0f;
-							//reading plain text
-							//address = addr+1;
-							addr <= 2;
-							input_key <= rdata;
-							//key_reg <= input_key;
+							key_reg <= input_key;
 							state_cnt <= `S_ID;
 							cmd <= `CMD_ST;
 							/*
@@ -188,11 +162,7 @@ module aes_128_encrypt(
                 `S_SP: begin
 							//state_reg <= 128'h 00041214120412000c00131108231919;
 							//state_reg <= 128'h_00112233445566778899aabbccddeeff;
-							//anu state_reg <= plain_text;
-							//reading plain text
-							//address = addr;
-							addr <= 1;
-							state_reg <= rdata;
+							state_reg <= plain_text;
 							state_cnt <= `S_ID;
 							cmd <= `CMD_SK;
 						  /*
@@ -210,4 +180,24 @@ module aes_128_encrypt(
         end
     end
     
+endmodule
+
+
+module clock_divider(clock_in, clock_out);
+	input clock_in;
+	output reg clock_out; // output clock after dividing the input clock by divisor
+	reg[15:0] counter=16'd0;
+	parameter DIVISOR = 16'd50000;
+	// The frequency of the output clk_out
+	//  = The frequency of the input clk_in divided by DIVISOR
+	// For example: Fclk_in = 50Mhz, if you want to get 1Hz signal to blink LEDs
+	// You will modify the DIVISOR parameter value to 28'd50.000.000
+	// Then the frequency of the output clk_out = 50Mhz/50.000.000 = 1Hz
+	always @(posedge clock_in)
+		begin
+		 counter <= counter + 16'd1;
+		 if(counter>=(DIVISOR-1))
+		  counter <= 16'd0;
+		 clock_out <= (counter<DIVISOR/2)?1'b1:1'b0;
+		end
 endmodule
