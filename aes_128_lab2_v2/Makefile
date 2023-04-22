@@ -11,6 +11,8 @@ clean:
 	rm -f inter.vpd
 	rm -f .restartSimSession.tcl.old
 	rm -f .__*
+	rm -f *.vcd
+	rm -f log
 
 
 all: clean tb_aes

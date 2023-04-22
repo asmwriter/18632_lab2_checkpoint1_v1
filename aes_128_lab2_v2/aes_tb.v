@@ -1,4 +1,4 @@
-`timescale 1ns / 1ns
+`timescale 1ns / 1ps
 
 `define CMD_ID 2'b00
 `define CMD_ST 2'b01
@@ -11,7 +11,7 @@ module aes_tb(
 
 // 100MHz clk
 reg clk = 1'b0;
-always #5 clk = !clk;
+always #10 clk = !clk;
 reg rst_ = 1'b1;
 
 // reg [127:0] plain_text = 128'h 00041214120412000c00131108231919;
@@ -35,9 +35,9 @@ initial begin
     i = 0;
     #20
     rst_ = 1'b0;
-    #20
+    #200
     rst_ = 1'b1;
-    #10;
+    #200;
     
     // cmd = `CMD_SP;
     // #10
@@ -62,8 +62,25 @@ initial begin
 //    cmd = `CMD_ST;
 //    #20
 //    cmd = `CMD_ID;
-    #10000 $finish;
+	
+    #100000 $finish;
 end
+
+// always begin
+// 	$display("rdata=%h", u1.rdata);
+// 	$display("key_reg_t=%h", u1.key_reg_t);
+// 	$display("input_reg_t=%h", u1.input_reg_t);
+// end
+
+always @(posedge clk) begin
+	$display("rdata = %h", u1.rdata);
+	$display("address = %h", u1.address);
+    $display("e128 = %h", u1.e128);
+end
+
+// always begin
+//     $display("e128 = %h", u1.e128);
+// end
 
 always @(posedge clk) begin
     if(ok == 1'b1 ) begin 
